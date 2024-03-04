@@ -16,7 +16,7 @@ Install [nvm](https://github.com/nvm-sh/nvm#installing-and-updating) (the Node V
 First, install the packages:
 
 ```bash
-cd openai/
+cd p5.GPT/
 npm install
 ```
 
@@ -30,7 +30,19 @@ You need to generate an API key to interact with ChatGPT:
 
 You then need the program to know how to access this variable, either by setting it as an environment variable in the terminal, or by saving it in a file.
 
-1. Environment variable:
+1. Saved in a file
+
+Save your secret API key in `secret.txt`.
+
+If you wish to use the file, paste the key into it and save it.
+
+It is then recommended to tell Git to ignore this file and keep its content unchanged, so that you don't add it by mistake to your fork:
+
+```bash
+git update-index --skip-worktree openai/secret.txt
+```
+
+2. Environment variable:
 
 ```bash
 export OPENAI_API_KEY=`cat $the/file/with/the/key.txt`
@@ -42,19 +54,7 @@ Or:
 export OPENAI_API_KEY=`theCrazyLongAPIKey`
 ```
 
-(You could also have the above line saved in your `.bashrc` in the home directory (`~`) on Mac and Linux.)
-
-2. Saved in a file
-
-Save your secret API key in `secret.txt`.
-
-If you wish to use the file, paste the key into it and save it.
-
-It is then recommended to tell Git to ignore this file and keep its content unchanged, so that you don't add it by mistake to your fork:
-
-```bash
-git update-index --skip-worktree openai/secret.txt
-```
+(You could also have the above line saved in your `.bashrc` or `.zshrc` in the home directory (`~`) on Mac and Linux.)
 
 ## Running the server
 
