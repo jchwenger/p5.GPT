@@ -2,9 +2,7 @@
 
 ## [p5.js](https://p5js.org/) & [ChatGPT](https://chat.openai.com/chat)
 
-Originally presented during a [Computational Arts MA/MFA Workshop, June 2023](https://docs.google.com/presentation/d/1vXS9aGwa5iYq-N-MjGMvgW46dsMt6MLyyiXX1zy7D3U/edit?usp=sharing). See the repo for [Machines Poétiques 2023](https://github.com/jchwenger/machines.poetiques.goldsmiths.2023).
-
-Iris Colomb & Jérémie Wenger
+Originally presented during a Computational Arts MA/MFA Workshop at Goldsmiths College, London, June 2023, by Iris Colomb & Jérémie Wenger. More info in the repo [Machines Poétiques 2023](https://github.com/jchwenger/machines.poetiques.goldsmiths.2023).
 
 ## Starter code
 
