@@ -6,65 +6,73 @@
 // systems through experimental French poetry, Goldsmiths College
 // --------------------------------------------------------------------------------
 
-const { Configuration, OpenAIApi } = require('openai');
-const fs = require('fs');
+import fs from 'fs';
+import OpenAI from 'openai';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
 
 // Authentication, two ways: environment or a file
 // -----------------------------------------------
-// 1) local environment
+// 1) Synchronous file read, cf.
+// https://nodejs.dev/en/learn/reading-files-with-nodejs/ (and GPT :>) let
+// secretOpenAIKey;
+
+let secretOpenAIKey;
+
+try {
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = dirname(__filename);
+  const data = fs.readFileSync(__dirname + '/secret.txt');
+  secretOpenAIKey =  data.toString().trim();
+} catch (err) {
+  console.error(err);
+}
+
+// 2) local environment
 //    for this, you need to define the variable in your terminal before launching node:
 //    export OPENAI_API_KEY=...
-let configuration = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-// console.log(configuration);
+if (!secretOpenAIKey) {
 
-// 2)
-// Synchronous file read, cf. https://nodejs.dev/en/learn/reading-files-with-nodejs/ (and GPT :>)
-if (!configuration.apiKey) {
+  console.log('configuration through the `secret.txt` file, trying the environment variable');
 
-  console.log('configuration through the environment variable failed, tying `secret.txt` file');
+  secretOpenAIKey = process.env.OPENAI_API_KEY;
 
-  function configureAPI() {
-    try {
-      const data = fs.readFileSync(__dirname + '/secret.txt');
-      return new Configuration({
-        apiKey: data.toString().trim(),
-      });
-    } catch (err) {
-      console.error(err);
-    }
-  }
-  configuration = configureAPI();
-  // console.log(configuration);
-
-  if (!configuration.apiKey) {
+  if (!secretOpenAIKey) {
     console.log('---------------------------------------------------------------------------------');
     console.log('could not access the secret API key, please read `readme.md` on how to configure!');
     console.log('---------------------------------------------------------------------------------');
     process.exit(2);
+  } else {
+    console.log('configuration through the environment variable successful!');
   }
 
 } else {
-
-  console.log('configuration through the environment variable successful!');
-
+  console.log('configuration through the secret text file successful!');
 }
 
-const openai = new OpenAIApi(configuration);
+const openai = new OpenAI({
+  apiKey: secretOpenAIKey,
+});
 
+// // to see all available models in the terminal
+// // (the official list can be found here: https://platform.openai.com/docs/models/overview)
 // async function listEngines() {
-//   return await openai.listEngines();
+//   return await openai.models.list();
 // }
 // console.log('requesting engines');
-// const response = listEngines();
-// console.log(response);
-// console.log('done');
+// const response = listEngines().then(r => {
+//   console.log(r);
+//   console.log('done');
+//   process.exit(2);
+// });
 
 // https://socket.io/get-started/chat#integrating-socketio
 // See also Dan Shiffman's tutorial on Node & Websockets for more information
 // https://www.youtube.com/watch?v=bjULmG8fqc8&list=PLRqwX-V7Uu6b36TzJidYfIYwTFEq3K5qH
-const express = require('express');
+
+import express from 'express';
+import { Server } from 'socket.io';
+
 const app = express();
 const port = 3000;
 const server = app.listen(port, () => {
@@ -74,8 +82,7 @@ const server = app.listen(port, () => {
 // make our 'public' folder visible to the outside world
 app.use(express.static('public'));
 
-const socket = require('socket.io');
-const io = socket(server);
+const io = new Server(server);
 
 io.on('connection', (socket) => {
 
@@ -85,6 +92,7 @@ io.on('connection', (socket) => {
   io.emit('message', 'hello');
   // console.log('sent message');
 
+  // ! See requestCompletion for notes on available models
   socket.on('completion request', (message, sock) => {
     console.log(`completion requested by user:`);
     console.log(message);
@@ -93,8 +101,8 @@ io.on('connection', (socket) => {
     requestCompletion(...Object.values(message))
       .then((response) => {
         // console.log(response); // see the full horror of the response object
-        console.log(response.data.choices);
-        const t = response.data.choices[0].text // TODO: OpenAI gives the option to get multiple responses for one request, to be explored!
+        console.log(response.choices);
+        const t = response.choices[0].text // TODO: OpenAI gives the option to get multiple responses for one request, to be explored!
         console.log('it answered!');
         io.emit('completion response', t);
       })
@@ -112,10 +120,9 @@ io.on('connection', (socket) => {
     requestMessage(...Object.values(message))
       .then((response) => {
         // console.log(response); // see the full horror of the response object
-        console.log(response.data.choices);
-        const t = response.data.choices[0].message.content;  // TODO: OpenAI gives the option to get multiple responses for one request, to be explored!
+        const t = response.choices[0].message.content;  // TODO: OpenAI gives the option to get multiple responses for one request, to be explored!
         console.log('it answered!');
-        console.log(response.data.choices);
+        console.log(response.choices);
         io.emit('chat response', t);
       })
       .catch((e) => {
@@ -132,7 +139,7 @@ io.on('connection', (socket) => {
     requestImage(...Object.values(message))
       .then((response) => {
         // console.log(response); // see the full horror of the response object
-        const t = response.data.data[0];  // TODO: OpenAI gives the option to get multiple images for one request, to be explored!
+        const t = response.data[0];  // TODO: OpenAI gives the option to get multiple images for one request, to be explored!
         console.log('it answered!');
         console.log(response.data);
         io.emit('image response', t);
@@ -154,9 +161,9 @@ async function requestCompletion(
   temperature = 0.7,
 ) {
   // console.log('inside requestCompletion', prompt, max_tokens, temperature);
-  return await openai.createCompletion({
-    model: 'text-davinci-003', // TODO: search the documentation for various models, possibly allow the user to change this from the UI
-    prompt: prompt,
+  return await openai.completions.create({
+    model: 'gpt-3.5-turbo-instruct', // TODO: search the documentation for various models, possibly allow the user to change this from the UI.
+    prompt: prompt,                  //       For available models, see here: https://stackoverflow.com/a/75777838
     temperature: parseFloat(temperature),  // security checks
     max_tokens: parseInt(max_tokens),      // for the variable type
     n: 1, // TODO: the parameter for requesting more than one answer
@@ -170,7 +177,7 @@ async function requestMessage(
   temperature = 0.7,
 ) {
   // console.log('inside requestChat', prompt, system_prompt, max_tokens, temperature);
-  return await openai.createChatCompletion({
+  return await openai.chat.completions.create({
     model: "gpt-3.5-turbo",
     messages: [
       {role: "system", content: system_prompt},
@@ -185,7 +192,7 @@ async function requestMessage(
 async function requestImage(
   prompt = "The rainbow cyborg armageddon, Dutch oil painting, 1723, British Museum"
 ) {
-  return await openai.createImage({
+  return await openai.images.generate({
     prompt: prompt,
     n: 1,              // TODO: the number of images should be betwen 1 & 10 → add the appropriate field to the UI
     size: "256x256",  // TODO: add a way for users to change image sizes, possible choices: 256x256, 512x512, or 1024x1024
