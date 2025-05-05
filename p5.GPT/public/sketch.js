@@ -229,7 +229,7 @@ function createUI() {
   const chatButton = document.createElement('button');
   chatButton.setAttribute('type', 'button');
   chatButton.setAttribute('content', 'chat');
-  completionButton.setAttribute('id', 'chat-button');
+  chatButton.setAttribute('id', 'chat-button');
   chatButton.textContent = 'chat';
   chatButton.addEventListener('click', () => requestChat());
 
@@ -237,7 +237,7 @@ function createUI() {
   const imgButton = document.createElement('button');
   imgButton.setAttribute('type', 'button');
   imgButton.setAttribute('content', 'image');
-  completionButton.setAttribute('id', 'img-button');
+  imgButton.setAttribute('id', 'img-button');
   imgButton.textContent = 'image';
   imgButton.addEventListener('click', () => requestImage());
 
