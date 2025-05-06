@@ -21,7 +21,7 @@ function setup() {
   // console.log(response);
   createUI();
 
-  bgColor = color(247, 192, 13)
+  bgColor = color(255, 254, 242)
   background(bgColor);
 
 }
